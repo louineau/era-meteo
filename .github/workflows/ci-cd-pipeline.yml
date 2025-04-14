@@ -17,10 +17,10 @@ jobs:
       uses: docker/setup-buildx-action@v1
 
     - name: Login to DockerHub
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2  # Assurez-vous d'utiliser la version v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_TOKEN }}
+        password: ${{ secrets.DOCKER_TOKEN }}  # Utilisez le token ici
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
@@ -53,5 +53,3 @@ jobs:
     - name: Terraform Apply
       run: terraform apply -auto-approve
       working-directory: ./terraform
-
-      
