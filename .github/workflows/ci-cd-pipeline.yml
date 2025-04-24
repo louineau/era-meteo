@@ -38,16 +38,13 @@ jobs:
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
-
-    - name: Write SSH key to file
-      run: echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key && chmod 600 private_key
       
     - name: Terraform Init
       run: terraform init
       working-directory: ./terraform
 
     - name: Terraform Apply
-      run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" -var="ssh_private_key_path=./private_key"
+      run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" -var="ssh_private_key='${{ secrets.EC2_SSH_PRIVATE_KEY }}'"
       working-directory: ./terraform
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
