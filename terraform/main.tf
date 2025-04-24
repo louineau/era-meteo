@@ -39,6 +39,45 @@ resource "aws_security_group" "ssh_access" {
   }
 }
 
+resource "aws_security_group" "http_access" {
+  name        = "allow_http_${replace(timestamp(), ":", "-")}"
+  description = "Allow http inbound traffic"
+
+  ingress {
+    description = "http"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # à restreindre en prod
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "npm_access" {
+  name        = "allow_npm_${replace(timestamp(), ":", "-")}"
+  description = "Allow npm inbound traffic"
+
+  ingress {
+    description = "npm"
+    from_port   = 3000
+    to_port     = 300
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # à restreindre en prod
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 
 resource "aws_instance" "app_server" {
   ami           = "ami-0e449927258d45bc4"  # Remplacez par l'AMI appropriée pour votre région
