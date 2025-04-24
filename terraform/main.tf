@@ -19,56 +19,32 @@ resource "aws_key_pair" "deployer" {
   public_key = var.ssh_public_key
 }
 
-resource "aws_security_group" "ssh_access" {
-  name        = "allow_ssh_${replace(timestamp(), ":", "-")}"
-  description = "Allow SSH inbound traffic"
+resource "aws_security_group" "app_sg" {
+  name        = "app_sg_${replace(timestamp(), ":", "-")}"
+  description = "Allow SSH, HTTP and app port"
 
   ingress {
     description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # à restreindre en prod
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-
-resource "aws_security_group" "http_access" {
-  name        = "allow_http_${replace(timestamp(), ":", "-")}"
-  description = "Allow http inbound traffic"
 
   ingress {
-    description = "http"
+    description = "HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # à restreindre en prod
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-
-resource "aws_security_group" "npm_access" {
-  name        = "allow_npm_${replace(timestamp(), ":", "-")}"
-  description = "Allow npm inbound traffic"
 
   ingress {
-    description = "npm"
+    description = "NPM/Node.js"
     from_port   = 3000
-    to_port     = 300
+    to_port     = 3000
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # à restreindre en prod
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -78,6 +54,7 @@ resource "aws_security_group" "npm_access" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 
 resource "aws_instance" "app_server" {
   ami           = "ami-0e449927258d45bc4"  # Remplacez par l'AMI appropriée pour votre région
@@ -117,7 +94,11 @@ resource "aws_instance" "app_server" {
     }
   }
   
-  vpc_security_group_ids = [aws_security_group.ssh_access.id]
+  vpc_security_group_ids = [
+  aws_security_group.ssh_access.id,
+  aws_security_group.http_access.id,
+  aws_security_group.npm_access.id
+]
 }
 
 output "instance_public_ip" {
