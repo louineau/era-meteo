@@ -41,9 +41,7 @@ jobs:
 
     - name: Write SSH key to file
       run: echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key && chmod 600 private_key
-      env:
-        EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-
+      
     - name: Terraform Init
       run: terraform init
       working-directory: ./terraform
