@@ -41,7 +41,7 @@ resource "aws_instance" "app_server" {
     connection {
       type        = "ssh"
       user        = "ec2-user"
-      private_key = file("${path.module}/private_key")  # Remplacez par le chemin vers votre clé privée
+      private_key = file("${path.module}/${ssh_private_key_path}")  # Remplacez par le chemin vers votre clé privée
       host        = self.public_ip
     }
   }
