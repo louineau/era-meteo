@@ -8,6 +8,12 @@ variable "ssh_public_key" {
   sensitive   = true
 }
 
+variable "ssh_private_key_path" {
+  description = "The path to the SSH private key for connecting to the EC2 instance"
+  type        = string
+  sensitive   = true
+}
+
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
   public_key = var.ssh_public_key
@@ -41,16 +47,10 @@ resource "aws_instance" "app_server" {
     connection {
       type        = "ssh"
       user        = "ec2-user"
-      private_key = file("${path.module}/${ssh_private_key_path}")  # Remplacez par le chemin vers votre clé privée
+      private_key = file(var.ssh_private_key_path) # Remplacez par le chemin vers votre clé privée
       host        = self.public_ip
     }
   }
-}
-
-variable "ssh_key" {
-  description = "The SSH private key for connecting to the EC2 instance"
-  type        = string
-  sensitive   = true
 }
 
 output "instance_public_ip" {
