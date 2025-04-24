@@ -59,6 +59,10 @@ resource "aws_instance" "app_server" {
 
   provisioner "remote-exec" {
     inline = [
+      "sudo yum update -y",
+      "sudo amazon-linux-extras install docker -y || sudo yum install docker -y",
+      "sudo systemctl start docker",
+      "sudo systemctl enable docker",
       "sudo docker pull teralti/era-meteo:latest",
       "sudo docker stop era-meteo-container || true",
       "sudo docker rm era-meteo-container || true",
