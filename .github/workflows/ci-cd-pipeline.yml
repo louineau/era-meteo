@@ -17,10 +17,10 @@ jobs:
       uses: docker/setup-buildx-action@v1
 
     - name: Login to DockerHub
-      uses: docker/login-action@v2  # Assurez-vous d'utiliser la version v2
+      uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_TOKEN }}  # Utilisez le token ici
+        password: ${{ secrets.DOCKER_TOKEN }}
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
@@ -39,17 +39,13 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
 
-    - name: Download Terraform provider from S3
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: |
-        aws s3 cp s3://your-bucket-name/path/to/terraform-provider-aws_v5.94.1_x5.exe terraform/.terraform/providers/registry.terraform.io/hashicorp/aws/5.94.1/windows_386/
-
     - name: Terraform Init
       run: terraform init
       working-directory: ./terraform
 
     - name: Terraform Apply
-      run: terraform apply -auto-approve
+      run: terraform apply -auto-approve -var="ssh_key=${{ secrets.EC2_SSH_KEY }}"
       working-directory: ./terraform
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
