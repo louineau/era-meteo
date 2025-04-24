@@ -94,11 +94,8 @@ resource "aws_instance" "app_server" {
     }
   }
   
-  vpc_security_group_ids = [
-  aws_security_group.ssh_access.id,
-  aws_security_group.http_access.id,
-  aws_security_group.npm_access.id
-]
+  vpc_security_group_ids = [aws_security_group.app_sg.id]
+
 }
 
 output "instance_public_ip" {
