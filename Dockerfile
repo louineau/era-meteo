@@ -32,7 +32,7 @@ RUN cat /etc/nginx/conf.d/default.conf
 RUN chown -R nginx:nginx /usr/share/nginx/html
 
 # Exposer le port 80 (classique pour Nginx)
-EXPOSE 8080
+EXPOSE 80
 
 # Démarrer Nginx
 CMD ["nginx", "-g", "daemon off;"]
