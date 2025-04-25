@@ -26,6 +26,12 @@ COPY --from=build /app/build .
 
 # Copier un fichier de configuration Nginx personnalisé si besoin (facultatif)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN cat /etc/nginx/conf.d/default.conf
+
+# Changer les permissions des fichiers pour Nginx
+RUN chown -R nginx:nginx /usr/share/nginx/html
+RUN ls /app/build
+
 
 # Exposer le port 80 (classique pour Nginx)
 EXPOSE 80
