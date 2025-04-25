@@ -1,34 +1,29 @@
-# Étape 1 : Build de l'application React
-FROM node:lts-alpine as build
-WORKDIR /app
+# Étape 1: Utiliser une image de base officielle de Node.js pour construire l'application
+FROM node:14 AS build
 
-# Copier les fichiers nécessaires pour installer les dépendances
+# Définir le répertoire de travail dans le conteneur
+WORKDIR /usr/src/weather-app
+
+# Copier le fichier package.json et package-lock.json
 COPY package*.json ./
 
 # Installer les dépendances
 RUN npm install
 
-# Copier le reste du projet
+# Copier le reste de l'application
 COPY . .
 
-# Construire l'application (génère le dossier "build")
+# Construire l'application pour la production
 RUN npm run build
 
-# Étape 2 : Serveur Nginx pour les fichiers statiques
-FROM nginx:stable-alpine
-WORKDIR /usr/share/nginx/html
+# Étape 2: Utiliser une image Nginx pour servir l'application
+FROM nginx:alpine
 
-# Supprimer les fichiers par défaut de Nginx
-RUN rm -rf ./*
+# Copier les fichiers construits par l'étape précédente vers le répertoire où Nginx les servira
+COPY --from=build /usr/src/weather-app/build /usr/share/nginx/html
 
-# Copier le build de l'étape précédente
-COPY --from=build /app/build .
-
-# Copier un fichier de configuration Nginx personnalisé si besoin (facultatif)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Exposer le port 80 (classique pour Nginx)
+# Exposer le port sur lequel Nginx écoutera
 EXPOSE 80
 
-# Démarrer Nginx
+# Commande par défaut pour démarrer Nginx
 CMD ["nginx", "-g", "daemon off;"]
