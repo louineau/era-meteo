@@ -1,5 +1,5 @@
 # Étape 1 : Build de l'application React
-FROM node:lts-alpine as build-vuejs
+FROM node:16-alpine as build-vuejs
 WORKDIR /app
 
 # Copier les fichiers nécessaires pour installer les dépendances
