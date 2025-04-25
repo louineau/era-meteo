@@ -15,7 +15,7 @@ COPY . .
 RUN npm run build
 
 # Étape 2 : Serveur Nginx pour les fichiers statiques
-FROM nginx:stable-alpine as production
+FROM nginx:stable-alpine
 WORKDIR /usr/share/nginx/html
 
 # Supprimer les fichiers par défaut de Nginx
