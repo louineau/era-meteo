@@ -77,7 +77,7 @@ resource "aws_instance" "app_server" {
               sudo yum update -y
               sudo amazon-linux-extras install docker -y
               sudo service docker start
-              sudo docker run -d -p 80:3000 teralti/era-meteo:latest
+              sudo docker run -d -p 80:80 teralti/era-meteo:latest
               EOF
 
   provisioner "remote-exec" {
@@ -89,7 +89,7 @@ resource "aws_instance" "app_server" {
       "sudo docker pull teralti/era-meteo:latest",
       "sudo docker stop era-meteo-container || true",
       "sudo docker rm era-meteo-container || true",
-      "sudo docker run -d -p 80:3000 --name era-meteo-container teralti/era-meteo:latest"
+      "sudo docker run -d -p 80:80 --name era-meteo-container teralti/era-meteo:latest"
     ]
 
     connection {
