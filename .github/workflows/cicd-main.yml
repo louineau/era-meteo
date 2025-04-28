@@ -27,6 +27,9 @@ jobs:
       with:
         push: true
         tags: teralti/era-meteo:latest
+        build-args: |
+          NGINX_PORT=80
+          NGINX_SERVER_NAME=localhost
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
