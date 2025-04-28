@@ -3,7 +3,7 @@ name: CI/CD Pipeline (Dev)
 on:
   push:
     branches:
-      - dev
+      - de
 
 jobs:
   build-and-deploy:
@@ -27,9 +27,6 @@ jobs:
       with:
         push: true
         tags: teralti/era-meteo-dev:latest
-        build-args: |
-          NGINX_PORT=8080
-          NGINX_SERVER_NAME=dev.localhost  
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
