@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (Main)
 
 on:
   push:
@@ -25,8 +25,13 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
       with:
+        context: ./app
+        file: ./app/Dockerfile
         push: true
         tags: teralti/era-meteo:latest
+        build-args: |
+          NGINX_PORT=80
+          NGINX_SERVER_NAME=localhos
 
   deploy:
     runs-on: ubuntu-latest
@@ -41,15 +46,14 @@ jobs:
       
     - name: Terraform Init
       run: terraform init
-      working-directory: ./terraform
+      working-directory: ./terraform/prod
 
     - name: Terraform Apply
       run: |
         terraform apply -auto-approve \
           -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
-          -var='ssh_private_key=${{ secrets.EC2_SSH_PRIVATE_KEY }}'
-      working-directory: ./terraform
+          -var="ssh_private_key=${{ secrets.EC2_SSH_PRIVATE_KEY }}"
+      working-directory: ./terraform/prod
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    
