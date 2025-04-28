@@ -1,4 +1,4 @@
-name: CI/CD Pipeline (Main)
+name: CI/CD Pipeline
 
 on:
   push:
@@ -27,9 +27,6 @@ jobs:
       with:
         push: true
         tags: teralti/era-meteo:latest
-        build-args: |
-          NGINX_PORT=80
-          NGINX_SERVER_NAME=localhos
 
   deploy:
     runs-on: ubuntu-latest
@@ -38,20 +35,21 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-      
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
       
     - name: Terraform Init
       run: terraform init
-      working-directory: ./terraform/prod
+      working-directory: ./terraform
 
     - name: Terraform Apply
       run: |
         terraform apply -auto-approve \
           -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
-          -var="ssh_private_key=${{ secrets.EC2_SSH_PRIVATE_KEY }}"
-      working-directory: ./terraform/prod
+          -var='ssh_private_key=${{ secrets.EC2_SSH_PRIVATE_KEY }}'
+      working-directory: ./terraform
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    
