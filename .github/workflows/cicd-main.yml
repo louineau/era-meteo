@@ -3,7 +3,7 @@ name: CI/CD Pipeline (Main)
 on:
   push:
     branches:
-      - main
+      - mai
 
 jobs:
   build:
@@ -31,7 +31,7 @@ jobs:
         tags: teralti/era-meteo:latest
         build-args: |
           NGINX_PORT=80
-          NGINX_SERVER_NAME=localhos
+          NGINX_SERVER_NAME=localhost
 
   deploy:
     runs-on: ubuntu-latest
