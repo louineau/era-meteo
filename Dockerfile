@@ -1,38 +1,33 @@
-# Étape 1 : Build de l'application React
-FROM node:16-alpine as build-vuejs
-WORKDIR /app
+provider "aws" {
+  region = "us-east-1"
+}
 
-# Copier les fichiers nécessaires pour installer les dépendances
-COPY package*.json ./
+variable "ssh_private_key" {
+  description = "The SSH private key for connecting to the EC2 instance"
+  type        = string
+  sensitive   = true
+}
 
-# Installer les dépendances
-RUN npm install
+variable "instance_public_ip" {
+  description = "The public IP address of the existing EC2 instance"
+  type        = string
+}
 
-# Copier le reste du projet
-COPY . .
+resource "null_resource" "update_dev_container" {
+  provisioner "remote-exec" {
+    inline = [
+      "sudo docker pull teralti/era-meteo:dev",
+      "sudo docker stop era-meteo-dev-container || true",
+      "sudo docker rm era-meteo-dev-container || true",
+      "sudo docker run -d -p 8080:8080 --name era-meteo-dev-container teralti/era-meteo:dev"
+    ]
 
-# Construire l'application (génère le dossier "build")
-RUN npm run build
-
-# Étape 2 : Serveur Nginx pour les fichiers statiques
-FROM nginx:stable-alpine as production-vuejs
-WORKDIR /usr/share/nginx/html
-
-# Supprimer les fichiers par défaut de Nginx
-RUN rm -rf ./*
-
-# Copier le build de l'étape précédente depuis l'étape `build-vuejs`
-COPY --from=build-vuejs /app/build /usr/share/nginx/html
-
-# Copier un fichier de configuration Nginx personnalisé si besoin (facultatif)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-RUN cat /etc/nginx/conf.d/default.conf
-
-# Changer les permissions des fichiers pour Nginx
-RUN chown -R nginx:nginx /usr/share/nginx/html
-
-# Exposer le port 80 (classique pour Nginx)
-EXPOSE 80
-
-# Démarrer Nginx
-CMD ["nginx", "-g", "daemon off;"]
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = var.ssh_private_key
+      host        = var.instance_public_ip
+      timeout     = "10m"
+    }
+  }
+}
