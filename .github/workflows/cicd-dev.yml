@@ -1,46 +1,43 @@
-name: CI/CD Pipeline (Dev)
+provider "aws" {
+  region = "us-east-1"
+}
 
-on:
-  push:
-    branches:
-      - dev
+variable "ssh_private_key" {
+  description = "The SSH private key for connecting to the EC2 instance"
+  type        = string
+  sensitive   = true
+}
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+# 🔍 Recherche l'instance EC2 existante par son tag Name
+data "aws_instance" "dev_instance" {
+  filter {
+    name   = "tag:Name"
+    values = ["EraMeteoServer"]
+  }
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+  most_recent = true
+}
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+resource "null_resource" "update_dev_container" {
+  provisioner "remote-exec" {
+    inline = [
+      "sudo docker pull teralti/era-meteo:dev",
+      "sudo docker stop era-meteo-dev-container || true",
+      "sudo docker rm era-meteo-dev-container || true",
+      "sudo docker run -d -p 8080:8080 --name era-meteo-dev-container teralti/era-meteo:dev"
+    ]
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_TOKEN }}
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = var.ssh_private_key
+      host        = data.aws_instance.dev_instance.public_ip
+      timeout     = "10m"
+    }
+  }
+}
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v2
-      with:
-        push: true
-        tags: teralti/era-meteo-dev:latest
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-
-    - name: Terraform Init
-      run: terraform init
-      working-directory: ./terraform/dev
-
-    - name: Terraform Apply
-      run: |
-        terraform apply -auto-approve \
-          -var="ssh_private_key=${{ secrets.EC2_SSH_PRIVATE_KEY }}" \
-          -var="instance_public_ip=${{ secrets.INSTANCE_PUBLIC_IP }}"
-      working-directory: ./terraform/dev
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+# (facultatif) Affiche l'IP pour debug ou logs
+output "dev_instance_ip" {
+  value = data.aws_instance.dev_instance.public_ip
+}
