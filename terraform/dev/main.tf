@@ -28,10 +28,10 @@ data "aws_instance" "dev_instance" {
 resource "null_resource" "update_dev_container" {
   provisioner "remote-exec" {
     inline = [
-      "sudo docker pull teralti/era-meteo:dev",
+      "sudo docker pull teralti/era-meteo-dev:latest",
       "sudo docker stop era-meteo-dev-container || true",
       "sudo docker rm era-meteo-dev-container || true",
-      "sudo docker run -d -p 8080:8080 --name era-meteo-dev-container teralti/era-meteo:dev"
+      "sudo docker run -d -p 8080:8080 --name era-meteo-dev-container teralti/era-meteo-dev:latest"
     ]
 
     connection {
