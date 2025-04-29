@@ -8,15 +8,22 @@ variable "ssh_private_key" {
   sensitive   = true
 }
 
-# 🔍 Recherche l'instance EC2 existante par son tag Name
-data "aws_instance" "dev_instance" {
+data "aws_instances" "dev_instances" {
   filter {
     name   = "tag:Name"
     values = ["EraMeteoServer"]
   }
 
-  most_recent = true
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
 }
+
+data "aws_instance" "dev_instance" {
+  instance_id = tolist(data.aws_instances.dev_instances.ids)[0]
+}
+
 
 resource "null_resource" "update_dev_container" {
   provisioner "remote-exec" {
