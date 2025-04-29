@@ -26,7 +26,7 @@ const App = () => {
   return (
     <div className={`App ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
       <header>
-        <h1>Era Météo</h1>
+        <h1>Era Météo.</h1>
         <button className="theme-toggle" onClick={toggleTheme}>
           {isDarkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
         </button>
