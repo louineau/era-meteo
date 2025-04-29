@@ -8,9 +8,14 @@ variable "ssh_private_key" {
   sensitive   = true
 }
 
-variable "instance_public_ip" {
-  description = "The public IP address of the existing EC2 instance"
-  type        = string
+# 🔍 Recherche l'instance EC2 existante par son tag Name
+data "aws_instance" "dev_instance" {
+  filter {
+    name   = "tag:Name"
+    values = ["EraMeteoServer"]
+  }
+
+  most_recent = true
 }
 
 resource "null_resource" "update_dev_container" {
@@ -26,8 +31,13 @@ resource "null_resource" "update_dev_container" {
       type        = "ssh"
       user        = "ec2-user"
       private_key = var.ssh_private_key
-      host        = var.instance_public_ip
+      host        = data.aws_instance.dev_instance.public_ip
       timeout     = "10m"
     }
   }
+}
+
+# (facultatif) Affiche l'IP pour debug ou logs
+output "dev_instance_ip" {
+  value = data.aws_instance.dev_instance.public_ip
 }
