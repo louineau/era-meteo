@@ -14,11 +14,32 @@ variable "ssh_private_key" {
   sensitive   = true
 }
 
+# Rechercher une instance EC2 existante avec le tag "EraMeteoServer"
+data "aws_instances" "existing_app" {
+  filter {
+    name   = "tag:Name"
+    values = ["EraMeteoServer"]
+  }
+
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
+}
+
+# Obtenir les infos sur cette instance existante si trouvée
+data "aws_instance" "existing" {
+  count       = length(data.aws_instances.existing_app.ids) == 0 ? 0 : 1
+  instance_id = data.aws_instances.existing_app.ids[0]
+}
+
+# Générer la clé SSH
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key-${timestamp()}"
   public_key = var.ssh_public_key
 }
 
+# Créer le groupe de sécurité
 resource "aws_security_group" "app_sg" {
   name        = "app_sg_${replace(timestamp(), ":", "-")}"
   description = "Allow SSH, HTTP and app port"
@@ -40,7 +61,7 @@ resource "aws_security_group" "app_sg" {
   }
 
   ingress {
-    description = "HTTP"
+    description = "App Port"
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
@@ -55,11 +76,14 @@ resource "aws_security_group" "app_sg" {
   }
 }
 
-
+# Créer une nouvelle instance SEULEMENT si aucune n’existe
 resource "aws_instance" "app_server" {
-  ami           = "ami-0e449927258d45bc4"  # Remplacez par l'AMI appropriée pour votre région
+  count         = length(data.aws_instances.existing_app.ids) == 0 ? 1 : 0
+  ami           = "ami-0e449927258d45bc4"
   instance_type = "t2.micro"
   key_name      = aws_key_pair.deployer.key_name
+
+  vpc_security_group_ids = [aws_security_group.app_sg.id]
 
   tags = {
     Name = "EraMeteoServer"
@@ -72,6 +96,16 @@ resource "aws_instance" "app_server" {
               sudo service docker start
               sudo docker run -d -p 80:80 teralti/era-meteo:latest
               EOF
+}
+
+# Sélection dynamique de l'IP à utiliser
+locals {
+  instance_ip = length(data.aws_instance.existing) > 0 ? data.aws_instance.existing[0].public_ip : aws_instance.app_server[0].public_ip
+}
+
+# Provisioning distant Docker (pull/run) sur l'instance cible
+resource "null_resource" "deploy_docker" {
+  depends_on = [aws_instance.app_server]
 
   provisioner "remote-exec" {
     inline = [
@@ -88,16 +122,14 @@ resource "aws_instance" "app_server" {
     connection {
       type        = "ssh"
       user        = "ec2-user"
-      private_key = var.ssh_private_key # Remplacez par le chemin vers votre clé privée
-      host        = self.public_ip
-      timeout     = "10m" 
+      private_key = var.ssh_private_key
+      host        = local.instance_ip
+      timeout     = "10m"
     }
   }
-  
-  vpc_security_group_ids = [aws_security_group.app_sg.id]
-
 }
 
+# Afficher l’IP publique finale
 output "instance_public_ip" {
-  value = aws_instance.app_server.public_ip
+  value = local.instance_ip
 }
