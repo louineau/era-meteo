@@ -34,9 +34,9 @@ resource "null_resource" "deploy_docker" {
       "sudo systemctl start docker",
       "sudo systemctl enable docker",
       "sudo docker pull teralti/era-meteo:latest",
-      "sudo docker stop era-meteo-container || true",
-      "sudo docker rm era-meteo-container || true",
-      "sudo docker run -d -p 80:80 --name era-meteo-container teralti/era-meteo:latest"
+      "sudo docker stop era-meteo || true",
+      "sudo docker rm era-meteo|| true",
+      "sudo docker run -d -p 80:80 --name era-meteo teralti/era-meteo:latest"
     ]
 
     connection {
